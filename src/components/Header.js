@@ -16,7 +16,7 @@ export default function Header() {
   };
   return (
     
-    <nav className="navbar navbar-expand-lg bg-body-tertiary">
+    <nav className="navbar navbar-expand-lg bg-body-tertiary" style={{ position: 'sticky', top: 0, zIndex: 1020 }}>
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="navbar-brand text-blue-600 text-xl font-extrabold flex items-center gap-2">
           <FaShieldAlt className='text-18xl'/> SafeHer
@@ -27,6 +27,8 @@ export default function Header() {
           <Link to="/report" className="text-gray-700"><FaExclamationTriangle /> Report</Link>
           <Link to="/resources" className="text-gray-700"><FaHandsHelping /> Resources</Link>
           <Link to="/team" className="text-gray-700">Team</Link>
+          {/* <Link to="/login" className="text-gray-700">login</Link> */}
+          
           <button onClick={handleSOSClick} className=" btn btn-danger bg-red-600 text-white px-3 py-1 rounded flex items-center"><FaBell /> SOS</button>
         </nav>
       </div>

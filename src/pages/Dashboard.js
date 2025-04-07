@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -12,10 +12,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: '/leaflet/marker-shadow.png',
 });
 
-// Coordinates
 const BILASPUR_COORDS = [22.0797, 82.1391];
 
-// Risk Areas with custom icons
 const highRiskAreas = [
   { lat: 22.0800, lng: 82.1400, severity: 'high', name: 'Railway Station Area', icon: '/icons/alert-high.png' },
   { lat: 22.0700, lng: 82.1300, severity: 'medium', name: 'Bus Stand Vicinity', icon: '/icons/alert-medium.png' },
@@ -40,13 +38,12 @@ const safeZones = [
   },
 ];
 
-// Map click handler to set coordinates
 function LocationClicker() {
   useMapEvents({
     click(e) {
       const input = document.getElementById('incident-location');
       if (input) {
-        input.value = `Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`;
+        input.value = `https://www.google.com/maps?q=${e.latlng.lat.toFixed(4)},${e.latlng.lng.toFixed(4)}`;
       }
     },
   });
@@ -63,12 +60,57 @@ function createIcon(url) {
 }
 
 export default function LeafletMapDashboard() {
+  const [statusMessage, setStatusMessage] = useState('');
+  const [currentLink, setCurrentLink] = useState('');
+  const shareInputRef = useRef(null);
+
+  function startSharing() {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const link = `https://www.google.com/maps?q=${lat},${lon}`;
+        setStatusMessage(`Location: ${lat}, ${lon}`);
+        setCurrentLink(link);
+        if (shareInputRef.current) {
+          shareInputRef.current.value = link;
+        }
+      }, err => {
+        setStatusMessage('Error: ' + err.message);
+      });
+    } else {
+      setStatusMessage('Geolocation not supported.');
+    }
+  }
+
+  function copyLink() {
+    if (shareInputRef.current) {
+      shareInputRef.current.select();
+      shareInputRef.current.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      alert('Link copied to clipboard!');
+    }
+  }
+
+  function nativeShare() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Live Location',
+        text: 'Check my live location:',
+        url: currentLink
+      }).catch(error => {
+        alert('Sharing failed: ' + error);
+      });
+    } else {
+      alert('Your browser does not support native sharing. Copy the link instead.');
+    }
+  }
+
   return (
     <section id="dashboard" className="py-5 bg-light">
       <div className="container">
         <h2 className="h4 mb-4"><i className="fas fa-chart-line me-2"></i>Bilaspur Safety Dashboard</h2>
         <div className="row g-4">
-          {/* Map Container */}
           <div className="col-md-6">
             <div className="border rounded" style={{ height: '400px' }}>
               <MapContainer center={BILASPUR_COORDS} zoom={13} style={{ height: '100%', width: '100%' }}>
@@ -77,26 +119,14 @@ export default function LeafletMapDashboard() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 />
 
-                {/* High Risk Markers */}
                 {highRiskAreas.map((area, i) => (
-                  <Marker
-                    key={i}
-                    position={[area.lat, area.lng]}
-                    icon={createIcon(area.icon)}
-                  >
-                    <Popup>
-                      <b>{area.name}</b><br />Risk: {area.severity}
-                    </Popup>
+                  <Marker key={i} position={[area.lat, area.lng]} icon={createIcon(area.icon)}>
+                    <Popup><b>{area.name}</b><br />Risk: {area.severity}</Popup>
                   </Marker>
                 ))}
 
-                {/* Safe Zones */}
                 {safeZones.map((zone, i) => (
-                  <Marker
-                    key={i}
-                    position={[zone.lat, zone.lng]}
-                    icon={createIcon(zone.icon)}
-                  >
+                  <Marker key={i} position={[zone.lat, zone.lng]} icon={createIcon(zone.icon)}>
                     <Popup>
                       <span dangerouslySetInnerHTML={{ __html: `<strong>${zone.title}</strong><br>${zone.details}` }} />
                     </Popup>
@@ -108,7 +138,6 @@ export default function LeafletMapDashboard() {
             </div>
           </div>
 
-          {/* Stats & Info */}
           <div className="col-md-6">
             <div className="d-grid gap-3">
               <div className="bg-white p-3 shadow-sm rounded border">
@@ -130,6 +159,26 @@ export default function LeafletMapDashboard() {
                 placeholder="Click on map to get location"
                 readOnly
               />
+              <div>
+                <h3 className="mt-4">Live Location Sharing</h3>
+                <button onClick={startSharing} type="button" className="btn btn-primary" style={{borderRadius:"3em"}}>Start Sharing</button>
+                {statusMessage && <p className="text-info mt-2">{statusMessage}</p>}
+                <p><strong>Share this link:</strong></p>
+                <input
+                  type="text"
+                  id="shareLink"
+                  ref={shareInputRef}
+                  readOnly
+                  style={{
+                    width: '100%',
+                    marginBottom: '10px',
+                    borderColor: 'purple',
+                    borderRadius: '0.5em'
+                  }}
+                />
+                <button onClick={copyLink} type="button" className="btn btn-primary mx-1" style={{borderRadius:"3em"}}>Copy Link</button>
+                <button onClick={nativeShare} type="button" className="btn btn-primary mx-1" style={{borderRadius:"3em"}}>Share</button>
+              </div>
             </div>
           </div>
         </div>
