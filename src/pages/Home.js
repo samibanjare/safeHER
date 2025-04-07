@@ -31,17 +31,17 @@ const HomePage = () => {
           <div className="row g-4 mt-4">
             {[
               {
-                icon: "fas fa-bell",
+                icon: "fas fa-bell fa-3x",
                 title: "Emergency Alerts",
                 desc: "Instant notifications to authorities and trusted contacts with your location when you're in danger.",
               },
               {
-                icon: "fas fa-map-marked-alt",
+                icon: "fas fa-map-marked-alt fa-3x",
                 title: "Safety Zones",
                 desc: "Real-time mapping of safe areas and high-risk zones across Chhattisgarh based on community reports.",
               },
               {
-                icon: "fas fa-users",
+                icon: "fas fa-users fa-3x",
                 title: "Community Network",
                 desc: "Connect with other women in your area to share safety tips and travel together.",
               },
